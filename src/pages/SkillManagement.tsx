@@ -4,7 +4,7 @@ import { ArrowLeft, ChevronDown, Plus, Star, ThumbsUp } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSection from '../components/AnimatedSection'
 import BrandDirectoryCard from '../components/BrandDirectoryCard'
-import { useDesktopShellClasses } from '../context/DesktopLayoutContext'
+import { useDesktopLayout, useDesktopShellClasses } from '../context/DesktopLayoutContext'
 import { useModalPortalTarget } from '../context/ModalPortalContext'
 import {
   AtomBottomIcon1,
@@ -161,6 +161,7 @@ function FlowStepCard({ step }: { step: FlowStepData }) {
 
 // ─── New Skill modal ──────────────────────────────────────────
 function NewSkillModal({ onClose, defaultCategory }: { onClose: () => void; defaultCategory: SkillCategory }) {
+  const { embeddedScale, isEmbeddedInIframe } = useDesktopLayout()
   const portalTarget = useModalPortalTarget()
   const { addSkill } = usePlatform()
   const navigate     = useNavigate()
@@ -197,7 +198,8 @@ function NewSkillModal({ onClose, defaultCategory }: { onClose: () => void; defa
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
       onClick={handleBackdrop}
     >
-      <div className="relative mx-[20px] max-h-[90vh] w-full max-w-[760px] overflow-y-auto rounded-[24px] bg-white p-[40px] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+      <div style={isEmbeddedInIframe ? { transform: `scale(${embeddedScale})` } : undefined}>
+        <div className="relative mx-[20px] max-h-[90vh] w-full max-w-[760px] overflow-y-auto rounded-[24px] bg-white p-[40px] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
 
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -296,6 +298,7 @@ function NewSkillModal({ onClose, defaultCategory }: { onClose: () => void; defa
             创建Skill
           </button>
         </div>
+        </div>
       </div>
     </div>,
     portalTarget,
@@ -303,6 +306,7 @@ function NewSkillModal({ onClose, defaultCategory }: { onClose: () => void; defa
 }
 
 function PublishSkillModal({ onClose }: { onClose: () => void }) {
+  const { embeddedScale, isEmbeddedInIframe } = useDesktopLayout()
   const portalTarget = useModalPortalTarget()
   const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose()
@@ -317,7 +321,8 @@ function PublishSkillModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[3px]"
       onClick={handleBackdrop}
     >
-      <div className="relative mx-[20px] w-full max-w-[820px] rounded-[24px] bg-white px-[22px] pb-[24px] pt-[16px] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+      <div style={isEmbeddedInIframe ? { transform: `scale(${embeddedScale})` } : undefined}>
+        <div className="relative mx-[20px] w-full max-w-[820px] rounded-[24px] bg-white px-[22px] pb-[24px] pt-[16px] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[18px] font-semibold text-[#202531]">创建发布Skill</div>
@@ -386,6 +391,7 @@ function PublishSkillModal({ onClose }: { onClose: () => void }) {
             className="mt-[8px] min-h-[120px] w-full resize-none rounded-[12px] border border-[#eceff3] px-[12px] py-[10px] text-[13px] leading-[20px] text-[#202531] outline-none placeholder:text-[#c0c6cf]"
             placeholder="描述本次版本的主要变更内容"
           />
+        </div>
         </div>
       </div>
     </div>,

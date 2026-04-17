@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
+import { useDesktopLayout } from '../context/DesktopLayoutContext'
 import { useModalPortalTarget } from '../context/ModalPortalContext'
 import TaskFlowCanvas from './TaskFlowCanvas'
 
@@ -39,6 +40,7 @@ export default function CreateTaskModal({
   onSubmit,
   showTemplateButton = true,
 }: CreateTaskModalProps) {
+  const { embeddedScale, isEmbeddedInIframe } = useDesktopLayout()
   const portalTarget = useModalPortalTarget()
   const [syncFeishu, setSyncFeishu] = useState(true)
   const [name, setName] = useState(nameValue)
@@ -60,11 +62,12 @@ export default function CreateTaskModal({
       className="modal-overlay-transition fixed inset-0 z-50 flex items-center justify-center bg-[#05070b]/20 px-[24px] py-[20px] backdrop-blur-[10px]"
       onClick={onClose}
     >
-      <div
-        className="modal-panel-transition soft-shadow w-full max-w-[960px] rounded-[30px] bg-white px-[34px] pb-[26px] pt-[30px]"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
+      <div style={isEmbeddedInIframe ? { transform: `scale(${embeddedScale})` } : undefined}>
+        <div
+          className="modal-panel-transition soft-shadow w-full max-w-[960px] rounded-[30px] bg-white px-[34px] pb-[26px] pt-[30px]"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="flex items-center justify-between">
           <div className="flex items-center gap-[14px]">
             <div className="text-[24px] font-semibold tracking-[-0.03em] text-[#222733]">
               {title}
@@ -89,70 +92,71 @@ export default function CreateTaskModal({
               使用模板
             </button>
           ) : null}
-        </div>
-
-        <div className="mt-[22px]">
-          <label className="text-[16px] font-medium leading-[22px] text-[#1f2430]">{nameLabel}</label>
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            className="mt-[10px] h-[56px] w-full rounded-[14px] border border-[#eceff3] px-[16px] text-[16px] text-[#2d3340] outline-none placeholder:text-[#babfc9]"
-          />
-        </div>
-
-        <div className="mt-[20px]">
-          <label className="text-[16px] font-medium leading-[22px] text-[#1f2430]">{descriptionLabel}</label>
-          <textarea
-            value={desc}
-            onChange={(event) => setDesc(event.target.value)}
-            rows={3}
-            className="mt-[10px] min-h-[96px] w-full resize-none rounded-[14px] border border-[#eceff3] px-[16px] py-[14px] text-[16px] leading-[24px] text-[#2d3340] outline-none placeholder:text-[#babfc9]"
-          />
-        </div>
-
-        <div className="mt-[22px]">
-          <div className="text-[16px] font-medium leading-[22px] text-[#1f2430]">执行过程</div>
-          <div className="mt-[12px]">
-            <TaskFlowCanvas showExpand={Boolean(onExpand)} onExpand={onExpand} minHeight={620} />
           </div>
-        </div>
 
-        <div className="mt-[22px] flex items-center justify-between">
-          <div className="flex items-center gap-[12px]">
-            <span className="text-[16px] font-medium text-[#2d3340]">状态同步飞书</span>
+          <div className="mt-[22px]">
+            <label className="text-[16px] font-medium leading-[22px] text-[#1f2430]">{nameLabel}</label>
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="mt-[10px] h-[56px] w-full rounded-[14px] border border-[#eceff3] px-[16px] text-[16px] text-[#2d3340] outline-none placeholder:text-[#babfc9]"
+            />
+          </div>
+
+          <div className="mt-[20px]">
+            <label className="text-[16px] font-medium leading-[22px] text-[#1f2430]">{descriptionLabel}</label>
+            <textarea
+              value={desc}
+              onChange={(event) => setDesc(event.target.value)}
+              rows={3}
+              className="mt-[10px] min-h-[96px] w-full resize-none rounded-[14px] border border-[#eceff3] px-[16px] py-[14px] text-[16px] leading-[24px] text-[#2d3340] outline-none placeholder:text-[#babfc9]"
+            />
+          </div>
+
+          <div className="mt-[22px]">
+            <div className="text-[16px] font-medium leading-[22px] text-[#1f2430]">执行过程</div>
+            <div className="mt-[12px]">
+              <TaskFlowCanvas showExpand={Boolean(onExpand)} onExpand={onExpand} minHeight={620} />
+            </div>
+          </div>
+
+          <div className="mt-[22px] flex items-center justify-between">
+            <div className="flex items-center gap-[12px]">
+              <span className="text-[16px] font-medium text-[#2d3340]">状态同步飞书</span>
+              <button
+                type="button"
+                onClick={() => setSyncFeishu(!syncFeishu)}
+                className={`relative h-[34px] w-[60px] rounded-full transition ${
+                  syncFeishu ? 'bg-[#25c7b5]' : 'bg-[#d7dbe3]'
+                }`}
+              >
+                <span
+                  className={`absolute top-[3px] h-[28px] w-[28px] rounded-full bg-white shadow-[0_4px_12px_rgba(15,23,42,0.12)] transition ${
+                    syncFeishu ? 'left-[29px]' : 'left-[3px]'
+                  }`}
+                />
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={() => setSyncFeishu(!syncFeishu)}
-              className={`relative h-[34px] w-[60px] rounded-full transition ${
-                syncFeishu ? 'bg-[#25c7b5]' : 'bg-[#d7dbe3]'
-              }`}
+              onClick={() => {
+                const trimmedName = name.trim()
+                if (!trimmedName) {
+                  return
+                }
+                onSubmit?.({
+                  name: trimmedName,
+                  desc: desc.trim(),
+                  syncFeishu,
+                })
+                onClose()
+              }}
+              className="h-[48px] rounded-[14px] bg-black px-[20px] text-[16px] font-medium text-white"
             >
-              <span
-                className={`absolute top-[3px] h-[28px] w-[28px] rounded-full bg-white shadow-[0_4px_12px_rgba(15,23,42,0.12)] transition ${
-                  syncFeishu ? 'left-[29px]' : 'left-[3px]'
-                }`}
-              />
+              {actionLabel}
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              const trimmedName = name.trim()
-              if (!trimmedName) {
-                return
-              }
-              onSubmit?.({
-                name: trimmedName,
-                desc: desc.trim(),
-                syncFeishu,
-              })
-              onClose()
-            }}
-            className="h-[48px] rounded-[14px] bg-black px-[20px] text-[16px] font-medium text-white"
-          >
-            {actionLabel}
-          </button>
         </div>
       </div>
     </div>,

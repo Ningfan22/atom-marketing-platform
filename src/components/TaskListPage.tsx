@@ -5,7 +5,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import MetricCard from './MetricCard'
 import TaskDetailModal from './TaskDetailModal'
 import UserAvatar from './UserAvatar'
-import { useDesktopShellClasses } from '../context/DesktopLayoutContext'
+import { useDesktopLayout, useDesktopShellClasses } from '../context/DesktopLayoutContext'
 import { useModalPortalTarget } from '../context/ModalPortalContext'
 import { type PlatformTask, type TemplateCategory, usePlatform } from '../context/PlatformContext'
 
@@ -255,6 +255,7 @@ function CreateTaskModal({
   onClose: () => void
   onSubmit: (data: { name: string; desc: string; section: TemplateCategory }) => void
 }) {
+  const { embeddedScale, isEmbeddedInIframe } = useDesktopLayout()
   const portalTarget = useModalPortalTarget()
   const [section, setSection]               = useState<TemplateCategory>(defaultSection)
   const [sectionDropOpen, setSectionDropOpen] = useState(false)
@@ -293,7 +294,8 @@ function CreateTaskModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
       onClick={handleBackdrop}
     >
-      <div className="relative mx-[20px] max-h-[90vh] w-full max-w-[760px] overflow-y-auto rounded-[24px] bg-white p-[40px] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+      <div style={isEmbeddedInIframe ? { transform: `scale(${embeddedScale})` } : undefined}>
+        <div className="relative mx-[20px] max-h-[90vh] w-full max-w-[760px] overflow-y-auto rounded-[24px] bg-white p-[40px] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
 
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -391,6 +393,7 @@ function CreateTaskModal({
           </button>
         </div>
 
+        </div>
       </div>
     </div>,
     portalTarget,

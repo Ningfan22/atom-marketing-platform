@@ -151,7 +151,7 @@ function ExecutionInstanceCard({
 
 export default function TaskDetailModal({ task, onClose, onExpand }: TaskDetailModalProps) {
   const portalTarget = useModalPortalTarget()
-  const { isEmbeddedInIframe } = useDesktopLayout()
+  const { embeddedScale, isEmbeddedInIframe } = useDesktopLayout()
   const [activeTab, setActiveTab] = useState<'template' | 'instance' | 'data'>('data')
   const flowSteps = getTaskFlowSteps(task)
   const instanceCards = useMemo(() => Array.from({ length: 5 }, () => task), [task])
@@ -166,20 +166,21 @@ export default function TaskDetailModal({ task, onClose, onExpand }: TaskDetailM
   return createPortal(
     <div className="fixed inset-0 z-[999] bg-[#0b1018]/20 backdrop-blur-[3px] backdrop-brightness-[0.9]">
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: panelWidth }}>
-        <div
-          className="soft-shadow relative flex w-full flex-col overflow-hidden rounded-[28px] bg-white px-[42px] pb-[40px] pt-[42px]"
-          style={{ maxHeight: panelMaxHeight }}
-        >
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-[28px] top-[24px] text-[#a7aebb] transition hover:text-[#5c6474]"
+        <div style={isEmbeddedInIframe ? { transform: `scale(${embeddedScale})` } : undefined}>
+          <div
+            className="soft-shadow relative flex w-full flex-col overflow-hidden rounded-[28px] bg-white px-[42px] pb-[40px] pt-[42px]"
+            style={{ maxHeight: panelMaxHeight }}
           >
-            <X size={22} strokeWidth={1.6} />
-          </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute right-[28px] top-[24px] text-[#a7aebb] transition hover:text-[#5c6474]"
+            >
+              <X size={22} strokeWidth={1.6} />
+            </button>
 
-          <div className="flex-1 overflow-y-auto pr-[4px]">
-            <div className="text-[24px] font-semibold tracking-[-0.04em] text-[#202531]">任务详情</div>
+            <div className="flex-1 overflow-y-auto pr-[4px]">
+              <div className="text-[24px] font-semibold tracking-[-0.04em] text-[#202531]">任务详情</div>
 
             <div className="mt-[18px] flex items-start justify-between gap-[20px]">
               <div className="min-w-0">
@@ -321,6 +322,7 @@ export default function TaskDetailModal({ task, onClose, onExpand }: TaskDetailM
                   </div>
                 )}
               </AnimatedSection>
+            </div>
             </div>
           </div>
         </div>

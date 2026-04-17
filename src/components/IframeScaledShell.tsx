@@ -18,37 +18,10 @@ export default function IframeScaledShell({ children }: { children: ReactNode })
   const { isEmbeddedInIframe } = useDesktopLayout()
   const containerRef = useRef<HTMLDivElement>(null)
   const shellRef = useRef<HTMLDivElement>(null)
-  const portalHostRef = useRef<HTMLDivElement>(null)
   const [metrics, setMetrics] = useState<ShellMetrics>({
     containerWidth: DESKTOP_SHELL_WIDTH,
     shellHeight: 0,
   })
-  const [modalPortalTarget] = useState<HTMLDivElement | null>(() => {
-    if (typeof document === 'undefined') {
-      return null
-    }
-
-    return document.createElement('div')
-  })
-
-  useEffect(() => {
-    if (!isEmbeddedInIframe || !modalPortalTarget) {
-      return
-    }
-
-    const host = portalHostRef.current
-    if (!host) {
-      return
-    }
-
-    host.appendChild(modalPortalTarget)
-
-    return () => {
-      if (host.contains(modalPortalTarget)) {
-        host.removeChild(modalPortalTarget)
-      }
-    }
-  }, [isEmbeddedInIframe, modalPortalTarget])
 
   useEffect(() => {
     if (!isEmbeddedInIframe) {
@@ -98,7 +71,7 @@ export default function IframeScaledShell({ children }: { children: ReactNode })
   }
 
   return (
-    <ModalPortalProvider target={modalPortalTarget}>
+    <ModalPortalProvider target={null}>
       <div ref={containerRef} className="h-full overflow-hidden bg-white">
         <div
           className="mx-auto"
@@ -116,7 +89,6 @@ export default function IframeScaledShell({ children }: { children: ReactNode })
             }}
           >
             {children}
-            <div ref={portalHostRef} />
           </div>
         </div>
       </div>

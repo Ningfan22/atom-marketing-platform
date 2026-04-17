@@ -9,6 +9,7 @@ export const COMPACT_DESKTOP_BREAKPOINT =
   SIDEBAR_WIDTH + DESKTOP_CONTENT_WIDTH * DESKTOP_SCALE_FALLBACK_THRESHOLD
 
 interface DesktopLayoutContextValue {
+  embeddedScale: number
   isEmbeddedInIframe: boolean
   isCompactDesktop: boolean
   sidebarWidth: number
@@ -55,8 +56,10 @@ export function DesktopLayoutProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DesktopLayoutContextValue>(() => {
     const isCompactDesktop = isEmbeddedInIframe ? false : getIsCompactDesktop(viewportWidth)
+    const embeddedScale = isEmbeddedInIframe ? Math.min(1, viewportWidth / DESKTOP_SHELL_WIDTH) : 1
 
     return {
+      embeddedScale,
       isEmbeddedInIframe,
       isCompactDesktop,
       sidebarWidth: isCompactDesktop ? SIDEBAR_COMPACT_WIDTH : SIDEBAR_WIDTH,

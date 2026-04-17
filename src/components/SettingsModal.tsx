@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Bell, ChevronDown, Play, Settings, Target, X } from 'lucide-react'
+import { useDesktopLayout } from '../context/DesktopLayoutContext'
 import { useModalPortalTarget } from '../context/ModalPortalContext'
 
 // ─── Types ────────────────────────────────────────────────────
@@ -138,6 +139,7 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
+  const { embeddedScale, isEmbeddedInIframe } = useDesktopLayout()
   const portalTarget = useModalPortalTarget()
   const [activeTab, setActiveTab] = useState<Tab>('常规')
 
@@ -154,52 +156,52 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-[3px]"
       onClick={handleBackdrop}
     >
-      <div
-        className="flex w-[680px] overflow-hidden rounded-[20px] bg-white shadow-[0_32px_80px_rgba(15,23,42,0.18)]"
-        style={{ maxHeight: '72vh' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* ── Left nav ── */}
-        <div className="w-[176px] flex-shrink-0 border-r border-[#f2f3f5] bg-[#fafafa] px-[12px] py-[16px]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="mb-[16px] flex h-[30px] w-[30px] items-center justify-center rounded-full text-[#9aa3b2] transition hover:bg-[#eaedf2] hover:text-[#4b5260]"
-          >
-            <X size={15} strokeWidth={2} />
-          </button>
+      <div style={isEmbeddedInIframe ? { transform: `scale(${embeddedScale})` } : undefined}>
+        <div
+          className="flex w-[680px] overflow-hidden rounded-[20px] bg-white shadow-[0_32px_80px_rgba(15,23,42,0.18)]"
+          style={{ maxHeight: '72vh' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="w-[176px] flex-shrink-0 border-r border-[#f2f3f5] bg-[#fafafa] px-[12px] py-[16px]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="mb-[16px] flex h-[30px] w-[30px] items-center justify-center rounded-full text-[#9aa3b2] transition hover:bg-[#eaedf2] hover:text-[#4b5260]"
+            >
+              <X size={15} strokeWidth={2} />
+            </button>
 
-          <nav className="space-y-[3px]">
-            {tabs.map(({ id, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveTab(id)}
-                className={[
-                  'flex w-full items-center gap-[9px] rounded-[10px] px-[10px] py-[9px] text-left text-[14px] font-medium transition',
-                  activeTab === id
-                    ? 'bg-white text-[#1f2430] shadow-[0_1px_4px_rgba(15,23,42,0.07)]'
-                    : 'text-[#7a8394] hover:bg-white/60 hover:text-[#3d4455]',
-                ].join(' ')}
-              >
-                <Icon size={15} strokeWidth={1.8} />
-                {id}
-              </button>
-            ))}
-          </nav>
-        </div>
+            <nav className="space-y-[3px]">
+              {tabs.map(({ id, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  className={[
+                    'flex w-full items-center gap-[9px] rounded-[10px] px-[10px] py-[9px] text-left text-[14px] font-medium transition',
+                    activeTab === id
+                      ? 'bg-white text-[#1f2430] shadow-[0_1px_4px_rgba(15,23,42,0.07)]'
+                      : 'text-[#7a8394] hover:bg-white/60 hover:text-[#3d4455]',
+                  ].join(' ')}
+                >
+                  <Icon size={15} strokeWidth={1.8} />
+                  {id}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-        {/* ── Right content ── */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-[32px] py-[24px]">
-            <h2 className="mb-[4px] text-[17px] font-semibold tracking-[-0.02em] text-[#1f2430]">
-              {activeTab}
-            </h2>
-            <div className="mb-[4px] h-px bg-[#f0f1f3]" />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-[32px] py-[24px]">
+              <h2 className="mb-[4px] text-[17px] font-semibold tracking-[-0.02em] text-[#1f2430]">
+                {activeTab}
+              </h2>
+              <div className="mb-[4px] h-px bg-[#f0f1f3]" />
 
-            {activeTab === '常规'  && <GeneralTab />}
-            {activeTab === '通知'  && <NotificationTab />}
-            {activeTab === '个性化' && <PersonalizationTab />}
+              {activeTab === '常规'  && <GeneralTab />}
+              {activeTab === '通知'  && <NotificationTab />}
+              {activeTab === '个性化' && <PersonalizationTab />}
+            </div>
           </div>
         </div>
       </div>
