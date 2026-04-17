@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { useModalPortalTarget } from '../context/ModalPortalContext'
 
 interface PlatformModalProps {
   title: string
@@ -19,7 +20,9 @@ export default function PlatformModal({
   footer,
   widthClassName = 'max-w-[860px]',
 }: PlatformModalProps) {
-  if (typeof document === 'undefined') {
+  const portalTarget = useModalPortalTarget()
+
+  if (!portalTarget) {
     return null
   }
 
@@ -49,6 +52,6 @@ export default function PlatformModal({
         {footer ? <div className="mt-[22px] flex items-center justify-end gap-[12px]">{footer}</div> : null}
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }

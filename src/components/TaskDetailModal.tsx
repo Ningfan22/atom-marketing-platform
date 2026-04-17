@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowUpRight, X } from 'lucide-react'
 import AnimatedSection from './AnimatedSection'
+import { useDesktopLayout } from '../context/DesktopLayoutContext'
+import { useModalPortalTarget } from '../context/ModalPortalContext'
 import type { PlatformTask } from '../context/PlatformContext'
 import { getTaskFlowSteps } from '../utils/taskFlow'
 import TaskFlowCanvas from './TaskFlowCanvas'
@@ -148,19 +150,26 @@ function ExecutionInstanceCard({
 }
 
 export default function TaskDetailModal({ task, onClose, onExpand }: TaskDetailModalProps) {
+  const portalTarget = useModalPortalTarget()
+  const { isEmbeddedInIframe } = useDesktopLayout()
   const [activeTab, setActiveTab] = useState<'template' | 'instance' | 'data'>('data')
   const flowSteps = getTaskFlowSteps(task)
   const instanceCards = useMemo(() => Array.from({ length: 5 }, () => task), [task])
-  const tabContentHeight = 'clamp(300px, calc(100vh - 520px), 430px)'
+  const tabContentHeight = isEmbeddedInIframe ? '430px' : 'clamp(300px, calc(100vh - 520px), 430px)'
+  const panelWidth = isEmbeddedInIframe ? '920px' : 'min(920px, calc(100vw - 160px))'
+  const panelMaxHeight = isEmbeddedInIframe ? '730px' : 'calc(100vh - 150px)'
 
-  if (typeof document === 'undefined') {
+  if (!portalTarget) {
     return null
   }
 
   return createPortal(
-    <div className="fixed left-0 top-0 z-[999] h-screen w-screen bg-[#0b1018]/20 backdrop-blur-[3px] backdrop-brightness-[0.9]">
-      <div className="absolute left-1/2 top-1/2 w-[min(920px,calc(100vw-160px))] -translate-x-1/2 -translate-y-1/2">
-        <div className="soft-shadow relative flex max-h-[calc(100vh-150px)] w-full flex-col overflow-hidden rounded-[28px] bg-white px-[42px] pb-[40px] pt-[42px]">
+    <div className="fixed inset-0 z-[999] bg-[#0b1018]/20 backdrop-blur-[3px] backdrop-brightness-[0.9]">
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: panelWidth }}>
+        <div
+          className="soft-shadow relative flex w-full flex-col overflow-hidden rounded-[28px] bg-white px-[42px] pb-[40px] pt-[42px]"
+          style={{ maxHeight: panelMaxHeight }}
+        >
           <button
             type="button"
             onClick={onClose}
@@ -317,6 +326,6 @@ export default function TaskDetailModal({ task, onClose, onExpand }: TaskDetailM
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }

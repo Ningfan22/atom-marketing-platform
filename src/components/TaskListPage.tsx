@@ -6,6 +6,7 @@ import MetricCard from './MetricCard'
 import TaskDetailModal from './TaskDetailModal'
 import UserAvatar from './UserAvatar'
 import { useDesktopShellClasses } from '../context/DesktopLayoutContext'
+import { useModalPortalTarget } from '../context/ModalPortalContext'
 import { type PlatformTask, type TemplateCategory, usePlatform } from '../context/PlatformContext'
 
 const taskTypes = ['全部', '投放计划', 'Campaign', 'SEO'] as const
@@ -254,6 +255,7 @@ function CreateTaskModal({
   onClose: () => void
   onSubmit: (data: { name: string; desc: string; section: TemplateCategory }) => void
 }) {
+  const portalTarget = useModalPortalTarget()
   const [section, setSection]               = useState<TemplateCategory>(defaultSection)
   const [sectionDropOpen, setSectionDropOpen] = useState(false)
   const sectionDropRef = useRef<HTMLDivElement>(null)
@@ -280,6 +282,10 @@ function CreateTaskModal({
 
   const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose()
+  }
+
+  if (!portalTarget) {
+    return null
   }
 
   return createPortal(
@@ -387,7 +393,7 @@ function CreateTaskModal({
 
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }
 

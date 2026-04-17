@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
+import { useModalPortalTarget } from '../context/ModalPortalContext'
 import TaskFlowCanvas from './TaskFlowCanvas'
 
 const categoryOptions = ['广告投放', '达人营销', 'SEO', '创意生产']
@@ -38,6 +39,7 @@ export default function CreateTaskModal({
   onSubmit,
   showTemplateButton = true,
 }: CreateTaskModalProps) {
+  const portalTarget = useModalPortalTarget()
   const [syncFeishu, setSyncFeishu] = useState(true)
   const [name, setName] = useState(nameValue)
   const [desc, setDesc] = useState(descValue)
@@ -49,7 +51,7 @@ export default function CreateTaskModal({
     setCategory(categoryOptions[nextIndex])
   }
 
-  if (typeof document === 'undefined') {
+  if (!portalTarget) {
     return null
   }
 
@@ -154,6 +156,6 @@ export default function CreateTaskModal({
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }

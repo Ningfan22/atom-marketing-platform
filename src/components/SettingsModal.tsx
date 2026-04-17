@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Bell, ChevronDown, Play, Settings, Target, X } from 'lucide-react'
+import { useModalPortalTarget } from '../context/ModalPortalContext'
 
 // ─── Types ────────────────────────────────────────────────────
 type Tab = '常规' | '通知' | '个性化'
@@ -137,10 +138,15 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
+  const portalTarget = useModalPortalTarget()
   const [activeTab, setActiveTab] = useState<Tab>('常规')
 
   const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose()
+  }
+
+  if (!portalTarget) {
+    return null
   }
 
   return createPortal(
@@ -198,6 +204,6 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }

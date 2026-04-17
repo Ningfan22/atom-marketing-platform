@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSection from '../components/AnimatedSection'
 import BrandDirectoryCard from '../components/BrandDirectoryCard'
 import { useDesktopShellClasses } from '../context/DesktopLayoutContext'
+import { useModalPortalTarget } from '../context/ModalPortalContext'
 import {
   AtomBottomIcon1,
   AtomBottomIcon2,
@@ -160,6 +161,7 @@ function FlowStepCard({ step }: { step: FlowStepData }) {
 
 // ─── New Skill modal ──────────────────────────────────────────
 function NewSkillModal({ onClose, defaultCategory }: { onClose: () => void; defaultCategory: SkillCategory }) {
+  const portalTarget = useModalPortalTarget()
   const { addSkill } = usePlatform()
   const navigate     = useNavigate()
 
@@ -185,6 +187,10 @@ function NewSkillModal({ onClose, defaultCategory }: { onClose: () => void; defa
 
   const today   = new Date()
   const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`
+
+  if (!portalTarget) {
+    return null
+  }
 
   return createPortal(
     <div
@@ -292,13 +298,18 @@ function NewSkillModal({ onClose, defaultCategory }: { onClose: () => void; defa
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }
 
 function PublishSkillModal({ onClose }: { onClose: () => void }) {
+  const portalTarget = useModalPortalTarget()
   const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose()
+  }
+
+  if (!portalTarget) {
+    return null
   }
 
   return createPortal(
@@ -378,7 +389,7 @@ function PublishSkillModal({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }
 
