@@ -18,7 +18,7 @@ function readViewportSize(element: HTMLDivElement | null): ViewportSize {
 }
 
 export default function AdaptiveDesktopViewport({ children }: { children: ReactNode }) {
-  const { isCompactDesktop } = useDesktopLayout()
+  const { isCompactDesktop, isEmbeddedInIframe } = useDesktopLayout()
   const viewportRef = useRef<HTMLDivElement>(null)
   const [viewportSize, setViewportSize] = useState<ViewportSize>({ width: DESKTOP_CONTENT_WIDTH, height: 0 })
 
@@ -39,12 +39,12 @@ export default function AdaptiveDesktopViewport({ children }: { children: ReactN
   }, [])
 
   const scale = useMemo(() => {
-    if (isCompactDesktop || viewportSize.width <= 0) {
+    if (isCompactDesktop || isEmbeddedInIframe || viewportSize.width <= 0) {
       return 1
     }
 
     return Math.min(1, viewportSize.width / DESKTOP_CONTENT_WIDTH)
-  }, [isCompactDesktop, viewportSize.width])
+  }, [isCompactDesktop, isEmbeddedInIframe, viewportSize.width])
 
   const scaledContentHeight = useMemo(() => {
     if (viewportSize.height <= 0 || scale <= 0) {

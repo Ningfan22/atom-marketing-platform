@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation, type Location } from 'react-route
 import AdaptiveDesktopViewport from './components/AdaptiveDesktopViewport'
 import AnimatedRouteViewport, { type RouteVariant } from './components/AnimatedRouteViewport'
 import FloatingConciergeComposer from './components/FloatingConciergeComposer'
+import IframeScaledShell from './components/IframeScaledShell'
 import Sidebar from './components/Sidebar'
 import { DesktopLayoutProvider } from './context/DesktopLayoutContext'
 import AdPlacement from './pages/AdPlacement'
@@ -128,23 +129,25 @@ export default function App() {
 
   return (
     <DesktopLayoutProvider>
-      <div className="h-screen bg-white">
-        <div className="flex h-full min-h-[820px] overflow-hidden bg-white">
-          <Sidebar />
-          <main className="relative flex-1 overflow-hidden bg-white">
-            {isImmersiveRoute ? (
-              renderRoutes(location)
-            ) : (
-              <AnimatedRouteViewport location={location} transitionKey={routeTransitionKey} variant={routeVariant}>
-                {(displayLocation) => (
-                  <AdaptiveDesktopViewport>{renderRoutes(displayLocation)}</AdaptiveDesktopViewport>
-                )}
-              </AnimatedRouteViewport>
-            )}
-            <FloatingConciergeComposer />
-          </main>
+      <IframeScaledShell>
+        <div className="h-screen bg-white">
+          <div className="flex h-full min-h-[820px] overflow-hidden bg-white">
+            <Sidebar />
+            <main className="relative flex-1 overflow-hidden bg-white">
+              {isImmersiveRoute ? (
+                renderRoutes(location)
+              ) : (
+                <AnimatedRouteViewport location={location} transitionKey={routeTransitionKey} variant={routeVariant}>
+                  {(displayLocation) => (
+                    <AdaptiveDesktopViewport>{renderRoutes(displayLocation)}</AdaptiveDesktopViewport>
+                  )}
+                </AnimatedRouteViewport>
+              )}
+              <FloatingConciergeComposer />
+            </main>
+          </div>
         </div>
-      </div>
+      </IframeScaledShell>
     </DesktopLayoutProvider>
   )
 }

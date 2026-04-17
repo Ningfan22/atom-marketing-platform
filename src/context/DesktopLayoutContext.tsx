@@ -4,10 +4,12 @@ export const DESKTOP_CONTENT_WIDTH = 1260
 export const DESKTOP_SCALE_FALLBACK_THRESHOLD = 0.9
 export const SIDEBAR_WIDTH = 312
 export const SIDEBAR_COMPACT_WIDTH = 280
+export const DESKTOP_SHELL_WIDTH = SIDEBAR_WIDTH + DESKTOP_CONTENT_WIDTH
 export const COMPACT_DESKTOP_BREAKPOINT =
   SIDEBAR_WIDTH + DESKTOP_CONTENT_WIDTH * DESKTOP_SCALE_FALLBACK_THRESHOLD
 
 interface DesktopLayoutContextValue {
+  isEmbeddedInIframe: boolean
   isCompactDesktop: boolean
   sidebarWidth: number
 }
@@ -18,17 +20,33 @@ function getIsCompactDesktop(viewportWidth: number) {
   return viewportWidth < COMPACT_DESKTOP_BREAKPOINT
 }
 
+function getIsEmbeddedInIframe() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.self !== window.top
+  } catch {
+    return true
+  }
+}
+
 export function DesktopLayoutProvider({ children }: { children: ReactNode }) {
   const [viewportWidth, setViewportWidth] = useState(() =>
     typeof window === 'undefined' ? COMPACT_DESKTOP_BREAKPOINT : window.innerWidth,
   )
+  const [isEmbeddedInIframe, setIsEmbeddedInIframe] = useState(getIsEmbeddedInIframe)
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return
     }
 
-    const handleResize = () => setViewportWidth(window.innerWidth)
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth)
+      setIsEmbeddedInIframe(getIsEmbeddedInIframe())
+    }
 
     handleResize()
     window.addEventListener('resize', handleResize)
@@ -36,13 +54,14 @@ export function DesktopLayoutProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<DesktopLayoutContextValue>(() => {
-    const isCompactDesktop = getIsCompactDesktop(viewportWidth)
+    const isCompactDesktop = isEmbeddedInIframe ? false : getIsCompactDesktop(viewportWidth)
 
     return {
+      isEmbeddedInIframe,
       isCompactDesktop,
       sidebarWidth: isCompactDesktop ? SIDEBAR_COMPACT_WIDTH : SIDEBAR_WIDTH,
     }
-  }, [viewportWidth])
+  }, [isEmbeddedInIframe, viewportWidth])
 
   return <DesktopLayoutContext.Provider value={value}>{children}</DesktopLayoutContext.Provider>
 }
