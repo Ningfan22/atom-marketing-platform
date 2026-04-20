@@ -46,6 +46,12 @@ export default function CreateTaskModal({
   const [name, setName] = useState(nameValue)
   const [desc, setDesc] = useState(descValue)
   const [category, setCategory] = useState(categoryLabel)
+  const modalShellStyle = {
+    width: 'min(783px, calc(100vw - 48px))',
+    ...(isEmbeddedInIframe
+      ? { transform: `scale(${embeddedScale})`, transformOrigin: 'center center' }
+      : {}),
+  }
 
   const cycleCategory = () => {
     const currentIndex = categoryOptions.indexOf(category)
@@ -62,9 +68,9 @@ export default function CreateTaskModal({
       className="modal-overlay-transition fixed inset-0 z-50 flex items-center justify-center bg-[#05070b]/20 px-[24px] py-[20px] backdrop-blur-[10px]"
       onClick={onClose}
     >
-      <div style={isEmbeddedInIframe ? { transform: `scale(${embeddedScale})` } : undefined}>
+      <div style={modalShellStyle}>
         <div
-          className="modal-panel-transition soft-shadow w-full max-w-[960px] rounded-[30px] bg-white px-[34px] pb-[26px] pt-[30px]"
+          className="modal-panel-transition soft-shadow w-full rounded-[30px] bg-white px-[34px] pb-[26px] pt-[30px]"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex items-center justify-between">

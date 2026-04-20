@@ -263,6 +263,12 @@ function CreateTaskModal({
   const [name, setName]             = useState('')
   const [desc, setDesc]             = useState('')
   const [syncFeishu, setSyncFeishu] = useState(true)
+  const modalShellStyle = {
+    width: 'min(783px, calc(100vw - 40px))',
+    ...(isEmbeddedInIframe
+      ? { transform: `scale(${embeddedScale})`, transformOrigin: 'center center' }
+      : {}),
+  }
 
   useEffect(() => {
     if (!sectionDropOpen) return
@@ -294,8 +300,8 @@ function CreateTaskModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
       onClick={handleBackdrop}
     >
-      <div style={isEmbeddedInIframe ? { transform: `scale(${embeddedScale})` } : undefined}>
-        <div className="relative mx-[20px] max-h-[90vh] w-full max-w-[760px] overflow-y-auto rounded-[24px] bg-white p-[40px] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+      <div style={modalShellStyle}>
+        <div className="relative max-h-[90vh] w-full overflow-y-auto rounded-[24px] bg-white p-[40px] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
 
         {/* Header */}
         <div className="flex items-center justify-between">
