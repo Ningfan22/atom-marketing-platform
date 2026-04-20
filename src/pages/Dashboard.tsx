@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  ArrowUpRight,
   AlertTriangle,
   ChevronDown,
   Cloud,
@@ -73,6 +74,72 @@ const dashboardTaskCards = [
     dotColor: '#12d88d',
   },
 ]
+
+const dashboardAlerts = [
+  {
+    id: 'creative-a12-decay',
+    taskId: 1,
+    severity: 'high',
+    title: '素材 #A12 衰减率飙升 42%',
+    category: '广告投放',
+    time: '3 分钟前',
+    desc: 'CTR 下降 18%，建议替换为素材 #B07',
+  },
+  {
+    id: 'creator-leslie-renewal',
+    taskId: 20,
+    severity: 'high',
+    title: '达人 @leslie_vlog 合作到期未续约',
+    category: '达人营销',
+    time: '15 分钟前',
+    desc: '已带来 2.1M 曝光，建议确认续约报价',
+  },
+  {
+    id: 'keyword-ai-video-maker',
+    taskId: 28,
+    severity: 'medium',
+    title: '关键词 ai video maker 排名掉出 Top 3',
+    category: 'SEO',
+    time: '38 分钟前',
+    desc: '核心词排名下滑，需补齐竞品内容差异',
+  },
+  {
+    id: 'tiktok-account-limit',
+    taskId: 7,
+    severity: 'medium',
+    title: 'TikTok 账号触发限流',
+    category: '账号',
+    time: '1 小时前',
+    desc: '近期素材复用率偏高，建议切换素材组合',
+  },
+  {
+    id: 'daily-budget-low',
+    taskId: 15,
+    severity: 'low',
+    title: '日预算余额低于 10%',
+    category: '广告投放',
+    time: '2 小时前',
+    desc: '自动加预算前需人工确认投放上限',
+  },
+] as const
+
+const alertSeverityMeta = {
+  high: {
+    label: '高危',
+    dotClassName: 'bg-[#cc6a64]',
+    chipClassName: 'bg-[#fbf0f0] text-[#a95e60]',
+  },
+  medium: {
+    label: '中',
+    dotClassName: 'bg-[#d6b457]',
+    chipClassName: 'bg-[#f7f2df] text-[#8d7a3b]',
+  },
+  low: {
+    label: '低',
+    dotClassName: 'bg-[#8bc7a4]',
+    chipClassName: 'bg-[#eaf5ef] text-[#5f9271]',
+  },
+} as const
 
 const dashboardSettings = [
   {
@@ -153,6 +220,12 @@ function DashboardSettingCard({
   )
 }
 
+function getTaskFlowPath(task: { id: number; category: string }) {
+  if (task.category === '达人营销') return `/creator/flow/${task.id}`
+  if (task.category === 'SEO') return `/seo/flow/${task.id}`
+  return `/ad-placement/flow/${task.id}`
+}
+
 export default function Dashboard({ panelMode }: { panelMode?: 'settings' }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -160,7 +233,10 @@ export default function Dashboard({ panelMode }: { panelMode?: 'settings' }) {
   const { tasks } = usePlatform()
   const { rootMinWidthClass, mediumPagePaddingClass } = useDesktopShellClasses()
   const [alertDismissed, setAlertDismissed] = useState(false)
+  const [alertMenuOpen, setAlertMenuOpen] = useState(false)
+  const [ignoredAlertIds, setIgnoredAlertIds] = useState<string[]>([])
   const [previewTaskId, setPreviewTaskId] = useState<number | null>(null)
+  const alertMenuRef = useRef<HTMLDivElement>(null)
 
   const activeAccount =
     dashboardAccounts.find((item) => item.key === searchParams.get('account')) ?? dashboardAccounts[0]
@@ -177,8 +253,53 @@ export default function Dashboard({ panelMode }: { panelMode?: 'settings' }) {
     () => tasks.find((item) => item.id === previewTaskId) ?? null,
     [previewTaskId, tasks],
   )
+  const visibleAlerts = useMemo(
+    () => dashboardAlerts.filter((item) => !ignoredAlertIds.includes(item.id)),
+    [ignoredAlertIds],
+  )
+  const alertSeverityCounts = useMemo(
+    () =>
+      visibleAlerts.reduce(
+        (counts, item) => ({
+          ...counts,
+          [item.severity]: counts[item.severity] + 1,
+        }),
+        { high: 0, medium: 0, low: 0 },
+      ),
+    [visibleAlerts],
+  )
+  const alertTotal = Math.max(0, 31 - ignoredAlertIds.length)
+  const manualAlertTotal = Math.max(0, 17 - ignoredAlertIds.length)
   const panelTransitionKey = `${isSettingsView ? 'settings' : 'overview'}-${activeAccount.key}-${activePeriod.key}`
-  const openAlertTask = () => setPreviewTaskId(1)
+  const openAlertTask = () => {
+    setAlertMenuOpen(false)
+    setPreviewTaskId(1)
+  }
+
+  useEffect(() => {
+    if (!alertMenuOpen) {
+      return
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (alertMenuRef.current && !alertMenuRef.current.contains(event.target as Node)) {
+        setAlertMenuOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setAlertMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [alertMenuOpen])
 
   const updateDashboardSearch = (
     nextAccountKey: string,
@@ -207,9 +328,23 @@ export default function Dashboard({ panelMode }: { panelMode?: 'settings' }) {
     updateDashboardSearch(activeAccount.key, nextPeriod.key)
   }
 
+  const handleProcessAlert = (taskId: number) => {
+    setAlertMenuOpen(false)
+    setPreviewTaskId(taskId)
+  }
+
+  const handleIgnoreAlert = (alertId: string) => {
+    setIgnoredAlertIds((current) => (current.includes(alertId) ? current : [...current, alertId]))
+  }
+
+  const handleAiProcessAlerts = () => {
+    setIgnoredAlertIds((current) => Array.from(new Set([...current, ...visibleAlerts.map((item) => item.id)])))
+    setAlertMenuOpen(false)
+  }
+
   return (
-    <div className={`flex h-full ${rootMinWidthClass} flex-col bg-white`}>
-      <div className={`flex h-[72px] items-center justify-between border-b border-[#edf0f3] ${mediumPagePaddingClass}`}>
+    <div className={`relative flex h-full ${rootMinWidthClass} flex-col bg-white`}>
+      <div className={`relative z-40 flex h-[72px] items-center justify-between border-b border-[#edf0f3] bg-white ${mediumPagePaddingClass}`}>
         <div className="flex items-center gap-[12px]">
           <button
             onClick={cycleAccount}
@@ -231,13 +366,118 @@ export default function Dashboard({ panelMode }: { panelMode?: 'settings' }) {
           </button>
         </div>
 
-        <button
-          onClick={openAlertTask}
-          className="flex h-[40px] items-center gap-[6px] rounded-[12px] border border-[#ffd3da] px-[14px] text-[15px] font-medium text-[#ff566f]"
-        >
-          <AlertTriangle size={16} />
-          3项异常
-        </button>
+        <div ref={alertMenuRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setAlertMenuOpen((current) => !current)}
+            className={`flex h-[40px] items-center gap-[8px] rounded-full border px-[18px] text-[15px] font-semibold transition ${
+              alertMenuOpen
+                ? 'border-[#f0aaa8] bg-[#fff8f8] text-[#c95b5b]'
+                : 'border-[#f0b7b8] bg-white text-[#c95b5b] hover:bg-[#fff8f8]'
+            }`}
+          >
+            <span className="h-0 w-0 border-x-[7px] border-b-[12px] border-x-transparent border-b-[#d95f5d]" />
+            {alertTotal}项异常
+          </button>
+
+          {alertMenuOpen ? (
+            <div className="absolute right-0 top-[48px] z-50 w-[420px] rounded-[16px] border border-[#edf0f3] bg-white px-[14px] pb-[10px] pt-[13px] shadow-[0_16px_42px_rgba(15,23,42,0.12)]">
+              <span className="absolute right-[48px] top-[-7px] h-[14px] w-[14px] rotate-45 border-l border-t border-[#edf0f3] bg-white" />
+
+              <div className="relative flex items-center justify-between gap-[10px]">
+                <div className="flex min-w-0 items-center gap-[10px]">
+                  <div className="whitespace-nowrap text-[15px] font-semibold text-[#202531]">
+                    {alertTotal}项异常待处理
+                  </div>
+                  <div className="flex items-center gap-[4px]">
+                    {(['high', 'medium', 'low'] as const).map((severity) => (
+                      <span
+                        key={severity}
+                        className={`rounded-full px-[8px] py-[3px] text-[11px] font-semibold ${alertSeverityMeta[severity].chipClassName}`}
+                      >
+                        {alertSeverityMeta[severity].label} {alertSeverityCounts[severity]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAlertMenuOpen(false)
+                    navigate('/data-board/all')
+                  }}
+                  className="flex h-[26px] items-center gap-[3px] rounded-[7px] px-[5px] text-[12px] font-medium text-[#80848b] transition hover:bg-[#f6f7f8] hover:text-[#202531]"
+                >
+                  全部
+                  <ArrowUpRight size={13} strokeWidth={1.8} />
+                </button>
+              </div>
+
+              <div className="mt-[12px] border-t border-[#eef1f4] pt-[12px]">
+                {visibleAlerts.length > 0 ? (
+                  <div className="space-y-[11px]">
+                    {visibleAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className="grid grid-cols-[8px_minmax(0,1fr)_auto] items-center gap-[10px]"
+                      >
+                        <span className={`h-[7px] w-[7px] rounded-full ${alertSeverityMeta[alert.severity].dotClassName}`} />
+                        <div className="min-w-0">
+                          <div className="line-clamp-1 text-[14px] font-semibold text-[#202531]">
+                            {alert.title}
+                          </div>
+                          <div className="mt-[4px] flex min-w-0 items-center gap-[6px] text-[11px] leading-[16px] text-[#9a9da5]">
+                            <span className="max-w-[72px] truncate rounded-[6px] bg-[#f5f5f6] px-[7px] py-[2px] text-[#888c94]">
+                              {alert.category}
+                            </span>
+                            <span className="text-[#c4c7cd]">·</span>
+                            <span className="whitespace-nowrap">{alert.time}</span>
+                            <span className="text-[#c4c7cd]">·</span>
+                            <span className="line-clamp-1 min-w-0">{alert.desc}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-[6px]">
+                          <button
+                            type="button"
+                            onClick={() => handleProcessAlert(alert.taskId)}
+                            className="h-[28px] w-[52px] rounded-[8px] bg-[#111318] text-[12px] font-semibold text-white transition hover:bg-black"
+                          >
+                            处理
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleIgnoreAlert(alert.id)}
+                            className="h-[28px] w-[52px] rounded-[8px] border border-[#e4e6ea] bg-white text-[12px] font-semibold text-[#4b5058] transition hover:bg-[#f7f8fa]"
+                          >
+                            忽略
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex h-[92px] items-center justify-center rounded-[10px] bg-[#f8f9fa] text-[12px] font-medium text-[#9299a5]">
+                    当前展示异常已处理
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-[12px] flex items-center justify-between border-t border-[#eef1f4] pt-[10px]">
+                <div className="text-[12px] font-medium text-[#8d929b]">
+                  Agent 已处理 14 · 待人工 {manualAlertTotal}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAiProcessAlerts}
+                  className="rounded-[8px] px-[7px] py-[4px] text-[12px] font-semibold text-[#202531] transition hover:bg-[#f6f7f8]"
+                >
+                  AI 处理
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className={`flex-1 overflow-y-auto ${mediumPagePaddingClass} pt-[54px] ${isSettingsView ? 'pb-[36px]' : 'pb-[124px]'}`}>
@@ -432,7 +672,7 @@ export default function Dashboard({ panelMode }: { panelMode?: 'settings' }) {
         <TaskDetailModal
           task={previewTask}
           onClose={() => setPreviewTaskId(null)}
-          onExpand={() => navigate(`/ad-placement/flow/${previewTask.id}`)}
+          onExpand={() => navigate(getTaskFlowPath(previewTask))}
         />
       ) : null}
     </div>

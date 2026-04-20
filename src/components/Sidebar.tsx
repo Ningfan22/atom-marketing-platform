@@ -9,7 +9,6 @@ import {
   AtomBottomIcon4,
   AtomBottomIcon5,
   AtomBottomIcon6,
-  AtomBottomIcon7,
 } from './AtomBottomIcons'
 import UserAvatar from './UserAvatar'
 import { CollapseGlyph } from './PlatformIcons'
@@ -32,7 +31,7 @@ const capabilityNav: NavItem[] = [
   { label: 'Skill', path: '/skill/ability', icon: <AtomBottomIcon4 size={18} /> },
   { label: '资源管理', path: '/resource', icon: <AtomBottomIcon5 size={18} /> },
   { label: '账号管理', path: '/account', icon: <AtomBottomIcon6 size={18} /> },
-  { label: '数据看板', path: '/data-board', icon: <AtomBottomIcon7 size={18} /> },
+  { label: '数据看板', path: '/data-board', icon: <AtomBottomIcon1 size={18} /> },
 ]
 
 function SidebarLink({ item }: { item: NavItem }) {

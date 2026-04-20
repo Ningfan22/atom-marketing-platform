@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, ChevronDown, Plus, Star, ThumbsUp } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Download, Plus, Star, ThumbsUp } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import AnimatedSection from '../components/AnimatedSection'
-import BrandDirectoryCard from '../components/BrandDirectoryCard'
 import { useDesktopLayout, useDesktopShellClasses } from '../context/DesktopLayoutContext'
 import { useModalPortalTarget } from '../context/ModalPortalContext'
 import {
@@ -13,10 +12,8 @@ import {
   AtomBottomIcon4,
   AtomBottomIcon5,
   AtomBottomIcon6,
-  AtomBottomIcon7,
 } from '../components/AtomBottomIcons'
 import { type SkillCategory, usePlatform } from '../context/PlatformContext'
-import { getBrandLogo } from '../utils/brandLogos'
 
 // ─── Constants ───────────────────────────────────────────────
 const categories: SkillCategory[] = ['达人营销', 'PSEO', 'Paid Ads', '创意生产']
@@ -30,6 +27,20 @@ const categorySlugMap: Record<SkillCategory, string> = {
 const slugCategoryMap: Record<string, SkillCategory> = Object.fromEntries(
   Object.entries(categorySlugMap).map(([k, v]) => [v, k as SkillCategory]),
 )
+
+type SkillMarketCardData = {
+  id: number
+  title: string
+  tag: SkillCategory
+  tagTone: 'orange' | 'green'
+  desc: string
+  author: string
+  likes: string
+  stars: string
+  mine: boolean
+  starred: boolean
+  status: string
+}
 
 // ─── Radar ───────────────────────────────────────────────────
 const radarLabels = ['选热点词', 'SKILL 2', '组合优化', '选热点词', '组合优化', 'SKILL 6']
@@ -104,6 +115,62 @@ function AbilityRadar({ category, enabledCount }: { category: SkillCategory; ena
         )
       })}
     </svg>
+  )
+}
+
+function SkillMarketCard({
+  card,
+  onClick,
+}: {
+  card: SkillMarketCardData
+  onClick: () => void
+}) {
+  const isOrange = card.tagTone === 'orange'
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="panel-border flex h-[180px] w-full flex-col rounded-[14px] bg-white px-[24px] py-[22px] text-left transition hover:border-[#dce2ea] hover:shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
+    >
+      <div className="flex items-start gap-[8px]">
+        <div className="min-w-0 truncate text-[17px] font-semibold leading-[22px] tracking-[-0.03em] text-[#202531]">
+          {card.title}
+        </div>
+        <span
+          className="mt-[1px] flex-shrink-0 rounded-[5px] px-[6px] py-[2px] text-[11px] font-medium leading-[15px]"
+          style={{
+            backgroundColor: isOrange ? '#fff3e3' : '#edf9f0',
+            color: isOrange ? '#d7822a' : '#25a95b',
+          }}
+        >
+          {card.tag}
+        </span>
+      </div>
+
+      <div className="mt-[12px] line-clamp-3 text-[14px] leading-[22px] text-[#8f98a7]">
+        {card.desc}
+      </div>
+
+      <div className="mt-auto flex items-center justify-between pt-[16px]">
+        <div className="flex min-w-0 items-center gap-[8px]">
+          <span className="flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-[#f4d90b] text-[10px] font-semibold text-[#151922]">
+            Z
+          </span>
+          <span className="truncate text-[14px] leading-[18px] text-[#4f5663]">{card.author}</span>
+        </div>
+        <div className="flex flex-shrink-0 items-center gap-[18px] text-[13px] leading-[18px] text-[#2d3340]">
+          <span className="flex items-center gap-[5px]">
+            <Download size={13} strokeWidth={1.8} />
+            {card.likes}
+          </span>
+          <span className="flex items-center gap-[5px]">
+            <Star size={13} strokeWidth={1.8} />
+            {card.stars}
+          </span>
+        </div>
+      </div>
+    </button>
   )
 }
 
@@ -363,7 +430,7 @@ function PublishSkillModal({ onClose }: { onClose: () => void }) {
                 type="button"
                 className="flex h-[30px] items-center gap-[6px] rounded-full border border-[#d9dde5] bg-white px-[12px] text-[12px] font-medium text-[#4b5260]"
               >
-                <AtomBottomIcon7 size={14} className="text-[#4b5260]" />
+                <AtomBottomIcon1 size={14} className="text-[#4b5260]" />
                 选择 zip 文件
               </button>
             </div>
@@ -404,7 +471,7 @@ export default function SkillManagement({ modalMode }: { modalMode?: 'create' })
   const navigate = useNavigate()
   const { viewKey, categoryKey } = useParams()
   const { skills } = usePlatform()
-  const { isCompactDesktop, rootMinWidthClass, widePagePaddingClass } = useDesktopShellClasses()
+  const { rootMinWidthClass, widePagePaddingClass } = useDesktopShellClasses()
 
   // New Skill design:
   // - `/skill/ability` => "我的Skill" (radar)
@@ -419,7 +486,6 @@ export default function SkillManagement({ modalMode }: { modalMode?: 'create' })
   const enabledCount = useMemo(() => skills.filter((s) => s.enabled).length, [skills])
 
   const skillViewTransitionKey = `${activeTab}-${activeCategory}`
-  const marketGridMaxWidthClass = isCompactDesktop ? 'max-w-full' : 'max-w-[960px]'
 
   // Ability view category dropdown
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -449,7 +515,7 @@ export default function SkillManagement({ modalMode }: { modalMode?: 'create' })
 
   const showModal = modalMode === 'create'
 
-  const marketCards = useMemo(
+  const marketCards = useMemo<SkillMarketCardData[]>(
     () => [
       {
         id: 1,
@@ -869,14 +935,11 @@ export default function SkillManagement({ modalMode }: { modalMode?: 'create' })
                   {/* Cards */}
                   <div className="mt-[14px] min-h-0 flex-1 overflow-y-auto pr-[2px]">
                     {visibleMarketCards.length ? (
-                      <div className={`grid grid-cols-2 gap-[12px] ${marketGridMaxWidthClass}`}>
+                      <div className="grid grid-cols-2 gap-[12px]">
                         {visibleMarketCards.map((card) => (
-                          <BrandDirectoryCard
+                          <SkillMarketCard
                             key={card.id}
-                            title={card.title}
-                            desc={card.desc}
-                            logoSrc={getBrandLogo(card.title)}
-                            status={card.status}
+                            card={card}
                             onClick={() => navigate(`/skill/detail/${card.id}`)}
                           />
                         ))}
